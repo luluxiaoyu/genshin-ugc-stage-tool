@@ -6,7 +6,6 @@
     <title>千星奇域关卡数据提取</title>
     
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
-    
     <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     
     <style>
@@ -45,28 +44,23 @@
             box-shadow: none;
             border-color: var(--primary-color);
         }
-        
-        /* --- 结果显示区 --- */
         .result-wrapper {
             background: #fff;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             margin-top: 20px;
-            padding: 30px; /* 增加内边距，防止边缘内容被切 */
+            padding: 30px; 
             background-color: #ffffff;
         }
-
-        /* --- 导出标题区域 --- */
         .export-header {
             margin-bottom: 25px;
             padding-bottom: 15px;
             border-bottom: 2px solid #eee;
             display: flex;
             justify-content: space-between;
-            align-items: flex-end; /* 底部对齐 */
+            align-items: flex-end;
         }
-        
         .export-title {
             font-size: 26px;
             font-weight: 800;
@@ -75,29 +69,25 @@
             background: transparent;
             width: 65%;
             outline: none;
-            line-height: 1.4; /* 给文字足够的行高 */
-            padding: 2px 0;   /* 增加微小的垂直内边距 */
+            line-height: 1.4;
+            padding: 2px 0;
             cursor: text;
         }
         .export-title:hover, .export-title:focus {
-            border-bottom-color: #ccc; /* 鼠标悬停或编辑时显示下划线 */
+            border-bottom-color: #ccc;
         }
-        
         .export-meta {
             text-align: right;
             font-size: 13px;
             color: #888;
             line-height: 1.6;
         }
-        .export-meta strong { color: #555; }
-
         .custom-table {
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
             margin-bottom: 0;
         }
-        /* 表头样式 */
         .custom-table thead th {
             background-color: #f8f9fa;
             color: #555;
@@ -114,8 +104,6 @@
             vertical-align: middle;
             background-color: #fff;
         }
-        
-        /* 元素样式 */
         .avatar-img {
             width: 38px;
             height: 38px;
@@ -133,10 +121,7 @@
             border: 1px solid #e0e0e0;
             display: block;
         }
-        .author-box {
-            display: flex;
-            align-items: center;
-        }
+        .author-box { display: flex; align-items: center; }
         .level-name {
             font-size: 15px;
             font-weight: 700;
@@ -144,8 +129,6 @@
             margin-bottom: 5px;
             line-height: 1.3;
         }
-        
-        /* 徽章优化：增加一点垂直间距 */
         .badge-custom {
             padding: 3px 8px;
             border-radius: 4px;
@@ -156,9 +139,8 @@
         }
         .badge-type { background-color: #e3f2fd; color: #1565c0; }
         .badge-cat { background-color: #f3e5f5; color: #6a1b9a; }
-        
         .badge-id { 
-            font-family: Consolas, Monaco, monospace; /* 优化数字显示 */
+            font-family: Consolas, Monaco, monospace; 
             color: #666; 
             background: #f8f9fa; 
             padding: 6px 10px; 
@@ -170,7 +152,6 @@
             border: 1px solid #eee;
         }
         .badge-id i { margin-right: 5px; color: #aaa; }
-        
         .badge-players {
             font-size: 13px;
             font-weight: bold;
@@ -183,8 +164,6 @@
             vertical-align: middle;
         }
         .badge-players i { margin-right: 5px; }
-        
-        /* 热度和好评 */
         .stat-item { 
             font-size: 13px; 
             color: #666; 
@@ -196,9 +175,7 @@
         .stat-item i { width: 20px; text-align: center; margin-right: 4px; }
         .text-hot { color: #ff7043; }
         .text-rate { color: #ffa000; }
-
         .loading-spinner { display: none; margin-left: 10px; }
-        
         .result-footer {
             margin-top: 25px;
             padding-top: 15px;
@@ -216,7 +193,6 @@
             transition: color 0.2s;
         }
         .source-link:hover { color: var(--primary-color); }
-        
         .error-row td {
             background-color: #fff5f5;
             color: #d32f2f;
@@ -228,7 +204,6 @@
 <body>
 
 <div class="main-container">
-    
     <div class="glass-card">
         <h3 class="mb-4 text-center fw-bold" style="color:#333;">
             <i class="fa-solid fa-star text-warning"></i> 千星奇域关卡数据提取
@@ -266,13 +241,12 @@
                         <th width="110" class="text-center">游玩人数</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody">
-                    </tbody>
+                <tbody id="tableBody"></tbody>
             </table>
         </div>
 
         <div class="result-footer">
-            <div>Generated by <strong>Genshin UGC Helper</strong></div>
+            <div>Generated by <strong>Genshin Stage Tool</strong></div>
             <div class="text-end">
                 数据来源：<a href="https://octavia.kj415j45.space/" target="_blank" class="source-link">Octavia - 千星奇域工具</a>
             </div>
@@ -284,7 +258,6 @@
             <i class="fa-solid fa-image"></i> 保存高清长图
         </button>
     </div>
-
 </div>
 
 <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
@@ -302,27 +275,63 @@
     const genTimeSpan = document.getElementById('genTime');
 
     const LINE_REGEX = /^(\d+)(?:[:：].*)?$/;
+    const CACHE_DURATION = 3 * 60 * 60 * 1000;
 
     const getProxyUrl = (url) => {
         if (!url) return 'https://via.placeholder.com/100x56?text=N/A';
-        return `/proxy-image?url=${encodeURIComponent(url)}`;
+        try {
+            const base64 = btoa(url);
+            return `/proxy-image/${encodeURIComponent(base64)}.png`;
+        } catch (e) {
+            console.error('Base64 encode failed', e);
+            return 'https://via.placeholder.com/100x56?text=Err';
+        }
     };
 
     async function fetchWithRetry(id, maxRetries = 3) {
+        const cacheKey = `stage_data_${id}`;
+        const cachedStr = localStorage.getItem(cacheKey);
+        
+        if (cachedStr) {
+            try {
+                const cachedObj = JSON.parse(cachedStr);
+                const now = Date.now();
+                if (now - cachedObj.timestamp < CACHE_DURATION) {
+                    console.log(`Hit cache for ID: ${id}`);
+                    return { isSuccess: true, data: cachedObj.data, id: id };
+                }
+            } catch (e) {
+                console.warn('Cache parse failed, removing', e);
+                localStorage.removeItem(cacheKey);
+            }
+        }
+
         let attempt = 0;
         let lastErrorMsg = 'Unknown';
         
         while (attempt <= maxRetries) {
             try {
                 if (attempt > 0) await new Promise(r => setTimeout(r, 1500));
-                const res = await fetch('/guid', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id })
+                
+                const res = await fetch(`/guid?id=${id}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
                 });
+
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const json = await res.json();
+                
                 if (json && json.success && json.data) {
+                    const cachePayload = {
+                        timestamp: Date.now(),
+                        data: json.data
+                    };
+                    try {
+                        localStorage.setItem(cacheKey, JSON.stringify(cachePayload));
+                    } catch (e) {
+                        console.warn('LocalStorage full or error', e);
+                    }
+
                     return { isSuccess: true, data: json.data, id: id };
                 } else {
                     throw new Error(json.error || 'API Logic Error');
@@ -468,11 +477,9 @@
     }
 
     btnDownload.addEventListener('click', () => {
-        // 更新时间
         const now = new Date();
         genTimeSpan.innerText = now.toLocaleString('zh-CN', { hour12: false });
         
-        // 截图前先滚动到顶部
         window.scrollTo(0,0);
 
         html2canvas(captureArea, {
