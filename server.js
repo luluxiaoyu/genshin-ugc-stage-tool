@@ -10,27 +10,41 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 图片代理接口
-app.get('/proxy-image', async (req, res) => {
-    const imageUrl = req.query.url;
-    if (!imageUrl) return res.status(400).send('No URL provided');
+app.get('/proxy-image/:base64Url', async (req, res) => {
+    let base64Str = req.params.base64Url;
+
+    if (base64Str.endsWith('.png')) {
+        base64Str = base64Str.slice(0, -4);
+    }
+
+    if (!base64Str) return res.status(400).send('No URL provided');
 
     try {
+        const decodedStr = decodeURIComponent(base64Str);
+        const imageUrl = Buffer.from(decodedStr, 'base64').toString('utf-8');
+
         const response = await axios.get(imageUrl, {
             responseType: 'arraybuffer',
             headers: { 'User-Agent': 'Mozilla/5.0' },
             timeout: 10000 
         });
+
+        res.set('Cache-Control', 'public, max-age=31104000, immutable');
         res.set('Content-Type', response.headers['content-type']);
+        
         res.send(response.data);
     } catch (error) {
         res.status(404).send('Image error');
     }
 });
 
-// 核心查询接口
-app.post('/guid', async (req, res) => {
-    const { id } = req.body;
+app.get('/guid', async (req, res) => {
+    const { id } = req.query; 
+
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+
     if (!id) return res.status(400).json({ error: '缺少 ID' });
 
     const targetUrl = `https://octavia.kj415j45.space/api/stage?region=cn_gf01&id=${id}`;
@@ -38,7 +52,7 @@ app.post('/guid', async (req, res) => {
     try {
         const response = await axios.get(targetUrl, {
             headers: { 'User-Agent': 'Mozilla/5.0' },
-            timeout: 15000 // 15秒超时
+            timeout: 15000 
         });
 
         const rawData = response.data;
@@ -50,7 +64,6 @@ app.post('/guid', async (req, res) => {
         const meta = rawData.level.meta || {};
         const author = rawData.author.game || {};
 
-        // 提取封面
         let coverUrl = '';
         const coverObj = meta.cover || {};
         if (coverObj.images && coverObj.images.length > 0) {
@@ -59,11 +72,9 @@ app.post('/guid', async (req, res) => {
             coverUrl = coverObj.videoCover;
         }
 
-        // 提取人数信息
         const playersData = meta.players || {};
         const playersStr = playersData.str || 'N/A';
         
-        // 解析 min/max 用于排序
         let minPlayers = 999;
         let maxPlayers = 999;
         
@@ -89,7 +100,6 @@ app.post('/guid', async (req, res) => {
             playersStr: playersStr,
             hotScore: meta.hotScore || '0',
             goodRate: meta.goodRate || '-',
-            // 排序权重
             sortMin: minPlayers,
             sortMax: maxPlayers,
             coverUrl: coverUrl
