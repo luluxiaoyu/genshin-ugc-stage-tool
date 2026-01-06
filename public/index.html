@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>千星奇域关卡数据提取</title>
+    
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f0f2f5;
+        }
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+            background-color: var(--bg-color);
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+        .main-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 15px;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .input-area textarea {
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .input-area textarea:focus {
+            box-shadow: none;
+            border-color: var(--primary-color);
+        }
+        
+        /* --- 结果显示区 --- */
+        .result-wrapper {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-top: 20px;
+            padding: 30px; /* 增加内边距，防止边缘内容被切 */
+            background-color: #ffffff;
+        }
+
+        /* --- 导出标题区域 --- */
+        .export-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end; /* 底部对齐 */
+        }
+        
+        .export-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: #333;
+            border-bottom: 1px dashed transparent;
+            background: transparent;
+            width: 65%;
+            outline: none;
+            line-height: 1.4; /* 给文字足够的行高 */
+            padding: 2px 0;   /* 增加微小的垂直内边距 */
+            cursor: text;
+        }
+        .export-title:hover, .export-title:focus {
+            border-bottom-color: #ccc; /* 鼠标悬停或编辑时显示下划线 */
+        }
+        
+        .export-meta {
+            text-align: right;
+            font-size: 13px;
+            color: #888;
+            line-height: 1.6;
+        }
+        .export-meta strong { color: #555; }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 0;
+        }
+        /* 表头样式 */
+        .custom-table thead th {
+            background-color: #f8f9fa;
+            color: #555;
+            font-weight: 700;
+            padding: 15px 12px;
+            border-bottom: 2px solid #eee;
+            text-align: left;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .custom-table tbody td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+            background-color: #fff;
+        }
+        
+        /* 元素样式 */
+        .avatar-img {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #eee;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .cover-img {
+            width: 96px;
+            height: 54px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid #e0e0e0;
+            display: block;
+        }
+        .author-box {
+            display: flex;
+            align-items: center;
+        }
+        .level-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+            line-height: 1.3;
+        }
+        
+        /* 徽章优化：增加一点垂直间距 */
+        .badge-custom {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        .badge-type { background-color: #e3f2fd; color: #1565c0; }
+        .badge-cat { background-color: #f3e5f5; color: #6a1b9a; }
+        
+        .badge-id { 
+            font-family: Consolas, Monaco, monospace; /* 优化数字显示 */
+            color: #666; 
+            background: #f8f9fa; 
+            padding: 6px 10px; 
+            border-radius: 6px;
+            font-size: 13px;
+            display: inline-block;
+            white-space: nowrap;
+            vertical-align: middle;
+            border: 1px solid #eee;
+        }
+        .badge-id i { margin-right: 5px; color: #aaa; }
+        
+        .badge-players {
+            font-size: 13px;
+            font-weight: bold;
+            color: #2e7d32;
+            background: #e8f5e9;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        .badge-players i { margin-right: 5px; }
+        
+        /* 热度和好评 */
+        .stat-item { 
+            font-size: 13px; 
+            color: #666; 
+            white-space: nowrap; 
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+        }
+        .stat-item i { width: 20px; text-align: center; margin-right: 4px; }
+        .text-hot { color: #ff7043; }
+        .text-rate { color: #ffa000; }
+
+        .loading-spinner { display: none; margin-left: 10px; }
+        
+        .result-footer {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #999;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .source-link {
+            color: #999;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.2s;
+        }
+        .source-link:hover { color: var(--primary-color); }
+        
+        .error-row td {
+            background-color: #fff5f5;
+            color: #d32f2f;
+            font-size: 13px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    
+    <div class="glass-card">
+        <h3 class="mb-4 text-center fw-bold" style="color:#333;">
+            <i class="fa-solid fa-star text-warning"></i> 千星奇域关卡数据提取
+        </h3>
+        <div class="mb-3 input-area">
+            <label for="dataInput" class="form-label text-muted">请输入列表 (格式: ID 或 ID:备注，一行一个)</label>
+            <textarea class="form-control" id="dataInput" rows="5"></textarea>
+        </div>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <button class="btn btn-primary px-4 rounded-pill fw-bold" type="button" id="btnStart">
+                <i class="fa-solid fa-magnifying-glass"></i> 开始提取 
+                <span class="spinner-border spinner-border-sm loading-spinner" id="spinner"></span>
+            </button>
+        </div>
+    </div>
+
+    <div id="captureArea" class="result-wrapper" style="display: none;">
+        <div class="export-header">
+            <div class="export-title" contenteditable="true" spellcheck="false">关卡统计列表</div>
+            <div class="export-meta">
+                <div>生成时间: <strong id="genTime">-</strong></div>
+                <div>项目数量: <strong id="countBadge">0</strong></div>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="custom-table" id="resultTable">
+                <thead>
+                    <tr>
+                        <th width="100">封面</th>
+                        <th width="160">作者</th>
+                        <th width="">关卡信息</th>
+                        <th width="140">关卡ID</th> 
+                        <th width="110">热度/好评</th>
+                        <th width="110" class="text-center">游玩人数</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="result-footer">
+            <div>Generated by <strong>Genshin UGC Helper</strong></div>
+            <div class="text-end">
+                数据来源：<a href="https://octavia.kj415j45.space/" target="_blank" class="source-link">Octavia - 千星奇域工具</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4" id="actionButtons" style="display: none;">
+        <button class="btn btn-success rounded-pill px-5 py-2 shadow-sm fw-bold" id="btnDownload">
+            <i class="fa-solid fa-image"></i> 保存高清长图
+        </button>
+    </div>
+
+</div>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<script>
+    const btnStart = document.getElementById('btnStart');
+    const btnDownload = document.getElementById('btnDownload');
+    const inputArea = document.getElementById('dataInput');
+    const tableBody = document.getElementById('tableBody');
+    const captureArea = document.getElementById('captureArea');
+    const actionButtons = document.getElementById('actionButtons');
+    const spinner = document.getElementById('spinner');
+    const countBadge = document.getElementById('countBadge');
+    const genTimeSpan = document.getElementById('genTime');
+
+    const LINE_REGEX = /^(\d+)(?:[:：].*)?$/;
+
+    const getProxyUrl = (url) => {
+        if (!url) return 'https://via.placeholder.com/100x56?text=N/A';
+        return `/proxy-image?url=${encodeURIComponent(url)}`;
+    };
+
+    async function fetchWithRetry(id, maxRetries = 3) {
+        let attempt = 0;
+        let lastErrorMsg = 'Unknown';
+        
+        while (attempt <= maxRetries) {
+            try {
+                if (attempt > 0) await new Promise(r => setTimeout(r, 1500));
+                const res = await fetch('/guid', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const json = await res.json();
+                if (json && json.success && json.data) {
+                    return { isSuccess: true, data: json.data, id: id };
+                } else {
+                    throw new Error(json.error || 'API Logic Error');
+                }
+            } catch (err) {
+                console.warn(`ID ${id} attempt ${attempt + 1} failed:`, err.message);
+                lastErrorMsg = err.message;
+                attempt++;
+            }
+        }
+        return { isSuccess: false, id: id, error: lastErrorMsg };
+    }
+
+    btnStart.addEventListener('click', async () => {
+        const text = inputArea.value.trim();
+        if (!text) return alert('请输入内容');
+
+        tableBody.innerHTML = ''; 
+        captureArea.style.display = 'block';
+        actionButtons.style.display = 'none';
+        btnStart.disabled = true;
+        spinner.style.display = 'inline-block';
+        
+        const now = new Date();
+        genTimeSpan.innerText = now.toLocaleString('zh-CN', { hour12: false });
+
+        const lines = text.split(/\n/).map(l => l.trim()).filter(l => l);
+        let completedCount = 0;
+
+        const promises = lines.map(async line => {
+            const match = line.match(LINE_REGEX);
+            if (!match) return null;
+            const id = match[1];
+            const result = await fetchWithRetry(id, 3);
+            
+            completedCount++;
+            countBadge.innerText = `${completedCount} / ${lines.length}`;
+            return result;
+        });
+
+        const validPromises = promises.filter(p => p !== null);
+
+        try {
+            const finalResults = await Promise.all(validPromises);
+            const safeResults = finalResults.filter(item => item !== undefined && item !== null);
+
+            if (safeResults.length > 0) {
+                safeResults.sort((a, b) => {
+                    if (a.isSuccess !== b.isSuccess) return a.isSuccess ? -1 : 1; 
+                    if (a.isSuccess) {
+                        const d1 = a.data;
+                        const d2 = b.data;
+                        const min1 = d1.sortMin !== undefined ? d1.sortMin : 999;
+                        const min2 = d2.sortMin !== undefined ? d2.sortMin : 999;
+                        const max1 = d1.sortMax !== undefined ? d1.sortMax : 999;
+                        const max2 = d2.sortMax !== undefined ? d2.sortMax : 999;
+                        if (min1 !== min2) return min1 - min2;
+                        return max1 - max2;
+                    }
+                    return 0;
+                });
+
+                tableBody.innerHTML = '';
+                safeResults.forEach(item => {
+                    if (item.isSuccess) {
+                        renderRow(item.data);
+                    } else {
+                        renderErrorRow({ levelId: item.id, msg: `获取失败: ${item.error}` });
+                    }
+                });
+
+                countBadge.innerText = `${safeResults.length}`;
+                actionButtons.style.display = 'block';
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">无有效数据</td></tr>';
+            }
+
+        } catch (globalErr) {
+            console.error('Critical Error:', globalErr);
+            alert('程序发生严重错误');
+        } finally {
+            btnStart.disabled = false;
+            spinner.style.display = 'none';
+        }
+    });
+
+    function renderRow(item) {
+        if (!item) return;
+        const tr = document.createElement('tr');
+        const avatarUrl = getProxyUrl(item.authorAvatar);
+        const coverUrl = getProxyUrl(item.coverUrl);
+
+        const hotHtml = item.hotScore ? `<div class="stat-item text-hot"><i class="fa-solid fa-fire"></i> ${item.hotScore}</div>` : '';
+        const rateHtml = item.goodRate ? `<div class="stat-item text-rate"><i class="fa-solid fa-thumbs-up"></i> ${item.goodRate}</div>` : '';
+
+        tr.innerHTML = `
+            <td>
+                <img src="${coverUrl}" class="cover-img" alt="封面" crossorigin="anonymous">
+            </td>
+            <td>
+                <div class="author-box">
+                    <img src="${avatarUrl}" class="avatar-img" alt="头像" crossorigin="anonymous">
+                    <div class="fw-bold small text-truncate" style="max-width: 120px;">${item.authorName || '未知'}</div>
+                </div>
+            </td>
+            <td>
+                <div class="level-name">${item.levelName || '未知'}</div>
+                <div class="d-block">
+                    <span class="badge-custom badge-type">${item.type || '-'}</span>
+                    <span class="badge-custom badge-cat">${item.category || '-'}</span>
+                </div>
+            </td>
+            <td>
+                <span class="badge-id">
+                    <i class="fa-solid fa-fingerprint"></i>${item.levelId}
+                </span>
+            </td>
+            <td>
+                <div class="d-flex flex-column">
+                    ${hotHtml}
+                    ${rateHtml}
+                </div>
+            </td>
+            <td class="text-center">
+                <span class="badge-players">
+                    <i class="fa-solid fa-users"></i> ${item.playersStr || 'N/A'}
+                </span>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    }
+
+    function renderErrorRow(item) {
+        const tr = document.createElement('tr');
+        tr.className = 'error-row';
+        tr.innerHTML = `
+            <td colspan="6" class="text-center">
+                <i class="fa-solid fa-circle-exclamation me-1"></i> 
+                ID: <strong>${item.levelId}</strong> - ${item.msg}
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    }
+
+    btnDownload.addEventListener('click', () => {
+        // 更新时间
+        const now = new Date();
+        genTimeSpan.innerText = now.toLocaleString('zh-CN', { hour12: false });
+        
+        // 截图前先滚动到顶部
+        window.scrollTo(0,0);
+
+        html2canvas(captureArea, {
+            scale: 2, 
+            backgroundColor: '#ffffff', 
+            useCORS: true, 
+            allowTaint: true,
+            logging: false,
+            scrollY: -window.scrollY
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `千星奇域数据_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }).catch(err => {
+            alert('生成失败');
+            console.error(err);
+        });
+    });
+</script>
+
+</body>
+</html>
