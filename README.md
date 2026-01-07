@@ -2,13 +2,21 @@
 
 **Genshin UGC Stage Tool** 是一个用于批量提取、展示和导出《原神》“千星奇域”关卡数据的 Web 工具。支持通过关卡 ID 批量查询，生成包含封面、作者、热度、好评率及游玩人数的精美统计长图。
 
+> 🌐 **在线体验**：[https://ugc.nahida.vip](https://ugc.nahida.vip)
+
+## ☁️ 部署与支持
+
+**本项目由阿里云ESA提供加速、计算和保护**
+
+![阿里云ESA Pages](./assets/O1CN01H1UU3i1Cti9lYtFrs_!!6000000000139-2-tps-7534-844.png)
+
 ## 🚀 功能特性
 
 - **批量查询**：支持一次性输入多个关卡 ID 进行批量提取。
 - **多维数据**：展示关卡封面、作者信息、标签分类、热度评分、好评率及游玩人数。
 - **智能排序**：支持“原始输入顺序”与“游玩人数倒序”一键切换。
 - **高清导出**：基于 `html2canvas` 实现高清长图生成，支持自动排版和裁剪。
-- **图片代理**：内置 Node.js 代理服务，解决跨域问题 (CORS) 并自动缓存图片资源（360天），提升二次加载速度。
+- **图片代理**：内置代理服务，解决跨域问题 (CORS) 并自动缓存图片资源，提升二次加载速度。
 - **本地缓存**：前端实现 LocalStorage 缓存（3小时），避免短时间内重复请求 API。
 - **优雅交互**：采用毛玻璃（Glassmorphism）UI 设计，适配移动端与桌面端。
 
@@ -18,35 +26,37 @@
 - **UI 框架**：Bootstrap 5.3
 - **图标库**：FontAwesome 7.0
 - **截图生成**：html2canvas
-- **后端**：Node.js, Express
-- **网络请求**：Axios
+- **运行时/后端**：阿里云 ESA Edge Functions (Edge Routine) / Node.js
+- **网络请求**：Fetch API / Axios
 
-## 📦 安装与使用
+## 📦 开发与使用
 
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/luluxiaoyu/genshin-ugc-helpers.git
-cd genshin-ugc-helpers
+git clone [https://github.com/luluxiaoyu/genshin-ugc-stage-tool.git](https://github.com/luluxiaoyu/genshin-ugc-stage-tool.git)
+cd genshin-ugc-stage-tool
 ```
 
 ### 2. 安装依赖
 
 确保本地已安装 [Node.js](https://nodejs.org/) 环境。
 
-```bash
+```shell
 pnpm install
 ```
 
-### 3. 启动服务
+### 3. 启动本地服务
 
-```bash
+Bash
+
+```shell
 node server.js
 ```
 
 ### 4. 访问工具
 
-打开浏览器访问：`http://localhost:3000`
+打开浏览器访问：`http://localhost:3000` 或直接访问线上版本 `https://ugc.nahida.vip`
 
 ## 📊 数据来源说明
 
@@ -71,4 +81,4 @@ node server.js
 
 ------
 
-**Genshin UGC Stage Tool** GitHub: [luluxiaoyu/genshin-ugc-stage-tool]([luluxiaoyu/genshin-ugc-stage-tool](https://github.com/luluxiaoyu/genshin-ugc-stage-tool))
+**Genshin UGC Stage Tool** GitHub: [luluxiaoyu/genshin-ugc-stage-tool](https://github.com/luluxiaoyu/genshin-ugc-stage-tool)
