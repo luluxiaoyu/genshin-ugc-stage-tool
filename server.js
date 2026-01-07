@@ -8,8 +8,11 @@ const PORT = 3000;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// 静态文件托管
 app.use(express.static(path.join(__dirname, 'public')));
 
+// --- 图片代理接口 ---
 app.get('/proxy-image/:base64Url', async (req, res) => {
     let base64Str = req.params.base64Url;
 
@@ -38,6 +41,7 @@ app.get('/proxy-image/:base64Url', async (req, res) => {
     }
 });
 
+// --- 数据查询接口 ---
 app.get('/guid', async (req, res) => {
     const { id } = req.query; 
 
@@ -113,8 +117,10 @@ app.get('/guid', async (req, res) => {
     }
 });
 
+// --- 404 处理路由 ---
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    // 设置状态码为 404 并发送 404.html 文件
+    res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
 app.listen(PORT, () => {
