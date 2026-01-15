@@ -10,6 +10,9 @@
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
     <style>
         :root {
             --primary-color: #4a90e2;
@@ -23,7 +26,7 @@
             padding-bottom: 50px;
         }
         .main-container {
-            max-width: 1150px; /* 稍微加宽以容纳新列 */
+            max-width: 1150px;
             margin: 40px auto;
             padding: 0 15px;
         }
@@ -364,8 +367,11 @@
         </div>
     </div>
 
-    <div class="text-center mt-4" id="actionButtons" style="display: none;">
-        <button class="btn btn-success rounded-pill px-5 py-2 shadow-sm fw-bold" id="btnDownload">
+    <div class="text-center mt-4 d-flex justify-content-center gap-3" id="actionButtons" style="display: none;">
+        <button class="btn btn-success rounded-pill px-4 py-2 shadow-sm fw-bold" id="btnExportExcel">
+            <i class="fa-solid fa-file-excel"></i> 导出 Excel
+        </button>
+        <button class="btn btn-primary rounded-pill px-4 py-2 shadow-sm fw-bold" id="btnDownload">
             <i class="fa-solid fa-image"></i> 保存高清长图
         </button>
     </div>
@@ -555,6 +561,7 @@
 
     const btnStart = document.getElementById('btnStart');
     const btnDownload = document.getElementById('btnDownload');
+    const btnExportExcel = document.getElementById('btnExportExcel'); // 新增按钮
     const inputArea = document.getElementById('dataInput');
     const tableBody = document.getElementById('tableBody');
     const captureArea = document.getElementById('captureArea');
@@ -688,7 +695,10 @@
         tableBody.innerHTML = ''; 
         globalResults = []; 
         captureArea.style.display = 'block';
+        // 使用 flex 显示按钮组
+        actionButtons.className = 'text-center mt-4 d-flex justify-content-center gap-3';
         actionButtons.style.display = 'none';
+        
         sortControl.style.display = 'none';
         btnStart.disabled = true;
         spinner.style.display = 'inline-block';
@@ -729,7 +739,7 @@
             await Promise.all(validPromises);
             sortAndRender();
             countBadge.innerText = `${globalResults.length}`;
-            actionButtons.style.display = 'block';
+            actionButtons.style.display = 'flex'; // 修改为 flex
             sortControl.style.display = 'inline-flex';
         } catch (globalErr) {
             console.error('Critical Error:', globalErr);
@@ -821,6 +831,115 @@
         tableBody.appendChild(tr);
     }
 
+    // --- Excel 导出逻辑 ---
+    btnExportExcel.addEventListener('click', async () => {
+        // 使用 ExcelJS 创建 Workbook
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'Genshin UGC Tool';
+        workbook.created = new Date();
+        
+        const sheet = workbook.addWorksheet('关卡数据');
+
+        // 设置列
+        sheet.columns = [
+            { header: '序号', key: 'index', width: 8 },
+            { header: '关卡ID', key: 'id', width: 15 },
+            { header: '关卡名称', key: 'name', width: 25 },
+            { header: '作者', key: 'author', width: 15 },
+            { header: '类型', key: 'type', width: 12 },
+            { header: '标签', key: 'cat', width: 12 },
+            { header: '热度', key: 'hot', width: 10 },
+            { header: '好评', key: 'rate', width: 10 },
+            { header: '游玩人数', key: 'players', width: 12 },
+            { header: '状态', key: 'status', width: 10 },
+            { header: '封面链接', key: 'cover', width: 30 },
+        ];
+
+        // 样式：表头
+        const headerRow = sheet.getRow(1);
+        headerRow.font = { name: '微软雅黑', bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF4A90E2' } // 使用 CSS 中的 Primary Color
+        };
+        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+        headerRow.height = 24;
+
+        // 获取当前排序后的数据
+        const sortMode = document.querySelector('input[name="sortMode"]:checked').value;
+        const validData = globalResults.filter(item => item !== undefined && item !== null && item.isSuccess);
+
+        let sortedData = [...validData];
+        if (sortMode === 'original') {
+            sortedData.sort((a, b) => a.originalIndex - b.originalIndex);
+        } else {
+            // 复用排序逻辑
+            sortedData.sort((a, b) => {
+                const d1 = a.data; const d2 = b.data;
+                const min1 = d1.sortMin || 999; const min2 = d2.sortMin || 999;
+                const max1 = d1.sortMax || 999; const max2 = d2.sortMax || 999;
+                if (min1 !== min2) return min1 - min2;
+                return max1 - max2;
+            });
+        }
+
+        // 填充数据
+        sortedData.forEach((item, index) => {
+            const d = item.data;
+            const isPlayed = SaveManager.getPlayedStatus(d.levelId);
+            
+            const row = sheet.addRow({
+                index: index + 1,
+                id: d.levelId,
+                name: d.levelName || '未知',
+                author: d.authorName || '未知',
+                type: d.type || '-',
+                cat: d.category || '-',
+                hot: d.hotScore || '',
+                rate: d.goodRate || '',
+                players: d.playersStr || '',
+                status: isPlayed ? '★ 已玩' : '未玩',
+                cover: d.coverUrl || ''
+            });
+
+            // 样式：居中对齐
+            row.alignment = { vertical: 'middle', horizontal: 'center' };
+            
+            // 样式：状态列颜色
+            const statusCell = row.getCell('status');
+            if (isPlayed) {
+                statusCell.font = { color: { argb: 'FF2E7D32' }, bold: true }; // 绿色
+            } else {
+                statusCell.font = { color: { argb: 'FF999999' } }; // 灰色
+            }
+
+            // 样式：给ID加链接（看起来像链接）
+            const idCell = row.getCell('id');
+            idCell.font = { name: 'Consolas' };
+            
+            // 样式：封面列缩小字体
+            row.getCell('cover').font = { size: 9, color: { argb: 'FF555555' } };
+
+            // 边框
+            row.eachCell((cell) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFEEEEEE' } },
+                    left: { style: 'thin', color: { argb: 'FFEEEEEE' } },
+                    bottom: { style: 'thin', color: { argb: 'FFEEEEEE' } },
+                    right: { style: 'thin', color: { argb: 'FFEEEEEE' } }
+                };
+            });
+        });
+
+        // 导出文件
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const fileName = `千星奇域_关卡统计_${new Date().toISOString().slice(0,10)}.xlsx`;
+        saveAs(blob, fileName);
+    });
+
+    // --- 图片生成逻辑 ---
     btnDownload.addEventListener('click', () => {
         const now = new Date();
         genTimeSpan.innerText = now.toLocaleString('zh-CN', { hour12: false });
