@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>千星奇域关卡数据提取</title>
+    <title>千星奇域关卡数据提取 & 进度管理</title>
     
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
@@ -23,7 +23,7 @@
             padding-bottom: 50px;
         }
         .main-container {
-            max-width: 1100px;
+            max-width: 1150px; /* 稍微加宽以容纳新列 */
             margin: 40px auto;
             padding: 0 15px;
         }
@@ -69,7 +69,7 @@
         .title-group {
             display: flex;
             align-items: center; 
-            width: 60%;
+            width: 50%;
         }
 
         .title-icon {
@@ -96,7 +96,7 @@
             border-bottom-color: #ccc;
         }
         
-        /* 右侧控制区：包含排序按钮和元数据 */
+        /* 右侧控制区 */
         .header-controls {
             display: flex;
             flex-direction: column;
@@ -104,7 +104,6 @@
             gap: 8px;
         }
 
-        /* 排序切换按钮组 */
         .sort-toggle {
             font-size: 12px;
         }
@@ -183,15 +182,28 @@
             font-family: Consolas, Monaco, monospace; 
             color: #666; 
             background: #f8f9fa; 
-            padding: 6px 10px; 
+            padding: 6px 8px; 
             border-radius: 6px;
             font-size: 13px;
-            display: inline-block;
-            white-space: nowrap;
-            vertical-align: middle;
+            display: inline-flex;
+            align-items: center;
             border: 1px solid #eee;
         }
         .badge-id i { margin-right: 5px; color: #aaa; }
+        
+        .copy-btn {
+            margin-left: 8px;
+            cursor: pointer;
+            color: #bbb;
+            transition: color 0.2s;
+        }
+        .copy-btn:hover {
+            color: var(--primary-color);
+        }
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
         .badge-players {
             font-size: 13px;
             font-weight: bold;
@@ -248,15 +260,42 @@
             font-size: 13px;
             padding: 20px;
         }
+
+        /* 复选框样式 */
+        .status-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary-color);
+        }
+        /* 当前使用的存档提示 */
+        #currentProfileDisplay {
+            font-size: 14px;
+            color: #666;
+            background: #e9ecef;
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
 
 <div class="main-container">
     <div class="glass-card">
-        <h3 class="mb-4 text-center fw-bold" style="color:#333;">
-            <i class="fa-solid fa-star text-warning"></i> 千星奇域关卡数据提取
-        </h3>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold m-0" style="color:#333;">
+                <i class="fa-solid fa-star text-warning"></i> 千星奇域关卡数据提取
+            </h3>
+            <div>
+                <span id="currentProfileDisplay"><i class="fa-solid fa-folder-open"></i> 默认存档</span>
+                <button class="btn btn-outline-secondary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#saveManagerModal">
+                    <i class="fa-solid fa-floppy-disk"></i> 存档管理
+                </button>
+            </div>
+        </div>
+        
         <div class="mb-3 input-area">
             <label for="dataInput" class="form-label text-muted">请输入列表 (格式: ID 或 ID:备注，一行一个)</label>
             <textarea class="form-control" id="dataInput" rows="5"></textarea>
@@ -280,7 +319,7 @@
                 <div class="btn-group sort-toggle" role="group" id="sortControl" style="display: none;">
                     <input type="radio" class="btn-check" name="sortMode" id="sortOriginal" value="original" checked>
                     <label class="btn btn-outline-primary btn-sm" for="sortOriginal">
-                        <i class="fa-solid fa-list-ol"></i> 原始顺序
+                        <i class="fa-solid fa-list-ol"></i> 原始排序
                     </label>
                   
                     <input type="radio" class="btn-check" name="sortMode" id="sortPlayers" value="players">
@@ -301,11 +340,12 @@
                 <thead>
                     <tr>
                         <th width="100">封面</th>
-                        <th width="160">作者</th>
+                        <th width="150">作者</th>
                         <th width="">关卡信息</th>
-                        <th width="140">关卡ID</th> 
-                        <th width="110">热度/好评</th>
+                        <th width="150">关卡ID</th> 
+                        <th width="100">热度/好评</th>
                         <th width="110" class="text-center">游玩人数</th>
+                        <th width="60" class="text-center" title="标记是否已玩过">状态</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -331,10 +371,188 @@
     </div>
 </div>
 
+<div class="modal fade" id="saveManagerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-box-archive"></i> 存档管理</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <button class="btn btn-sm btn-primary" onclick="SaveManager.createNewProfile()"><i class="fa-solid fa-plus"></i> 新建存档</button>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('importFile').click()"><i class="fa-solid fa-file-import"></i> 导入</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="SaveManager.exportData()"><i class="fa-solid fa-file-export"></i> 备份</button>
+                        <input type="file" id="importFile" style="display: none;" accept=".json" onchange="SaveManager.importData(this)">
+                    </div>
+                </div>
+                <ul class="list-group" id="profileList">
+                    </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+  <div id="copyToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="fa-solid fa-check-circle me-2"></i> ID 已复制到剪贴板
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
 <script>
+    // --- 存档管理逻辑 ---
+    const SaveManager = {
+        STORAGE_KEY: 'genshin_ugc_save_data_v1',
+        data: {
+            currentProfileId: 'default',
+            profiles: {
+                'default': { name: '默认存档', playedLevels: [] }
+            }
+        },
+
+        init() {
+            const stored = localStorage.getItem(this.STORAGE_KEY);
+            if (stored) {
+                try {
+                    this.data = JSON.parse(stored);
+                } catch (e) {
+                    console.error('存档解析失败，重置为默认', e);
+                }
+            }
+            this.updateUI();
+            this.renderModalList();
+        },
+
+        save() {
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data));
+            this.updateUI();
+        },
+
+        updateUI() {
+            const currentName = this.data.profiles[this.data.currentProfileId]?.name || '未知存档';
+            document.getElementById('currentProfileDisplay').innerHTML = `<i class="fa-solid fa-folder-open"></i> ${currentName}`;
+        },
+
+        getPlayedStatus(levelId) {
+            const list = this.data.profiles[this.data.currentProfileId].playedLevels || [];
+            return list.includes(levelId.toString());
+        },
+
+        togglePlayed(levelId, isChecked) {
+            const idStr = levelId.toString();
+            const profile = this.data.profiles[this.data.currentProfileId];
+            if (!profile.playedLevels) profile.playedLevels = [];
+
+            if (isChecked) {
+                if (!profile.playedLevels.includes(idStr)) profile.playedLevels.push(idStr);
+            } else {
+                profile.playedLevels = profile.playedLevels.filter(id => id !== idStr);
+            }
+            this.save();
+        },
+
+        createNewProfile() {
+            const name = prompt("请输入新存档名称：");
+            if (name) {
+                const id = 'prof_' + Date.now();
+                this.data.profiles[id] = { name: name, playedLevels: [] };
+                this.switchProfile(id);
+                this.renderModalList();
+            }
+        },
+
+        switchProfile(id) {
+            if (this.data.profiles[id]) {
+                this.data.currentProfileId = id;
+                this.save();
+                this.renderModalList();
+                // 重新渲染表格以更新复选框状态
+                sortAndRender(); 
+            }
+        },
+
+        deleteProfile(id) {
+            if (Object.keys(this.data.profiles).length <= 1) {
+                alert("至少需要保留一个存档！");
+                return;
+            }
+            if (confirm("确定要删除这个存档吗？此操作不可恢复。")) {
+                delete this.data.profiles[id];
+                if (this.data.currentProfileId === id) {
+                    this.data.currentProfileId = Object.keys(this.data.profiles)[0];
+                }
+                this.save();
+                this.renderModalList();
+                sortAndRender();
+            }
+        },
+
+        exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "genshin_stage_backup_" + Date.now() + ".json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        },
+
+        importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    if (json.profiles && json.currentProfileId) {
+                        this.data = json;
+                        this.save();
+                        this.renderModalList();
+                        sortAndRender();
+                        alert("导入成功！");
+                    } else {
+                        alert("无效的存档文件格式");
+                    }
+                } catch (err) {
+                    alert("文件解析失败");
+                }
+                input.value = ''; // Reset
+            };
+            reader.readAsText(file);
+        },
+
+        renderModalList() {
+            const listEl = document.getElementById('profileList');
+            listEl.innerHTML = '';
+            Object.keys(this.data.profiles).forEach(id => {
+                const p = this.data.profiles[id];
+                const isActive = id === this.data.currentProfileId;
+                const li = document.createElement('li');
+                li.className = `list-group-item d-flex justify-content-between align-items-center ${isActive ? 'list-group-item-primary' : ''}`;
+                li.innerHTML = `
+                    <div style="cursor:pointer; flex-grow:1" onclick="SaveManager.switchProfile('${id}')">
+                        ${isActive ? '<i class="fa-solid fa-check text-primary me-2"></i>' : '<i class="fa-regular fa-circle me-2 text-muted"></i>'}
+                        <span class="fw-bold">${p.name}</span>
+                        <span class="badge bg-secondary rounded-pill ms-2">${p.playedLevels?.length || 0}</span>
+                    </div>
+                    ${!isActive ? `<button class="btn btn-xs btn-outline-danger ms-2" style="padding: 2px 6px; font-size:12px" onclick="SaveManager.deleteProfile('${id}')"><i class="fa-solid fa-trash"></i></button>` : ''}
+                `;
+                listEl.appendChild(li);
+            });
+        }
+    };
+
+    // --- 主程序逻辑 ---
+
     const btnStart = document.getElementById('btnStart');
     const btnDownload = document.getElementById('btnDownload');
     const inputArea = document.getElementById('dataInput');
@@ -346,12 +564,16 @@
     const genTimeSpan = document.getElementById('genTime');
     const sortControl = document.getElementById('sortControl');
     const sortRadios = document.querySelectorAll('input[name="sortMode"]');
+    const toastEl = document.getElementById('copyToast');
+    const bsToast = new bootstrap.Toast(toastEl);
 
     const LINE_REGEX = /^(\d+)(?:[:：].*)?$/;
     const CACHE_DURATION = 3 * 60 * 60 * 1000;
 
-    // 全局变量存储当前的所有数据
     let globalResults = [];
+
+    // 初始化存档系统
+    SaveManager.init();
 
     const getProxyUrl = (url) => {
         if (!url) return 'https://via.placeholder.com/100x56?text=N/A';
@@ -411,36 +633,29 @@
         return { isSuccess: false, id: id, error: lastErrorMsg };
     }
 
-    // 监听排序切换
     sortRadios.forEach(radio => {
         radio.addEventListener('change', () => {
             sortAndRender();
         });
     });
 
-    // 核心逻辑：排序并渲染
     function sortAndRender() {
         const sortMode = document.querySelector('input[name="sortMode"]:checked').value;
         const validData = globalResults.filter(item => item !== undefined && item !== null);
 
         if (validData.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">无有效数据</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4">无有效数据</td></tr>';
             return;
         }
 
-        // 复制一份数据以免修改原始顺序
         let sortedData = [...validData];
 
         if (sortMode === 'original') {
-            // 按原始索引排序
             sortedData.sort((a, b) => a.originalIndex - b.originalIndex);
         } else {
-            // 人数排序逻辑
             sortedData.sort((a, b) => {
-                // 成功的排前面
                 if (a.isSuccess !== b.isSuccess) return a.isSuccess ? -1 : 1; 
                 
-                // 成功的数据按人数排序
                 if (a.isSuccess) {
                     const d1 = a.data;
                     const d2 = b.data;
@@ -456,7 +671,6 @@
             });
         }
 
-        // 渲染 HTML
         tableBody.innerHTML = '';
         sortedData.forEach(item => {
             if (item.isSuccess) {
@@ -471,16 +685,14 @@
         const text = inputArea.value.trim();
         if (!text) return alert('请输入内容');
 
-        // 重置界面
         tableBody.innerHTML = ''; 
-        globalResults = []; // 清空全局数据
+        globalResults = []; 
         captureArea.style.display = 'block';
         actionButtons.style.display = 'none';
-        sortControl.style.display = 'none'; // 正在加载时隐藏排序按钮
+        sortControl.style.display = 'none';
         btnStart.disabled = true;
         spinner.style.display = 'inline-block';
         
-        // 重置排序为“原始”
         document.getElementById('sortOriginal').checked = true;
 
         const now = new Date();
@@ -489,26 +701,19 @@
         const lines = text.split(/\n/).map(l => l.trim()).filter(l => l);
         let completedCount = 0;
 
-        // 构建请求任务
         const promises = lines.map(async (line, index) => {
             const match = line.match(LINE_REGEX);
             if (!match) return null;
             const id = match[1];
             
-            // 执行获取
             const result = await fetchWithRetry(id, 3);
-            
-            // 附加原始索引，用于还原顺序
             const resultWithIndex = { ...result, originalIndex: index };
             
-            // 存入全局数组
             globalResults.push(resultWithIndex);
 
-            // 更新进度
             completedCount++;
             countBadge.innerText = `${completedCount} / ${lines.length}`;
 
-            // 实时渲染
             if (result.isSuccess) {
                 renderRow(result.data);
             } else {
@@ -522,14 +727,10 @@
 
         try {
             await Promise.all(validPromises);
-
-            // 全部完成后，执行一次正式的排序渲染
             sortAndRender();
-
             countBadge.innerText = `${globalResults.length}`;
             actionButtons.style.display = 'block';
-            sortControl.style.display = 'inline-flex'; // 显示排序按钮
-
+            sortControl.style.display = 'inline-flex';
         } catch (globalErr) {
             console.error('Critical Error:', globalErr);
             alert('程序发生严重错误');
@@ -539,6 +740,21 @@
         }
     });
 
+    // 复制 ID 功能
+    window.copyId = (id) => {
+        navigator.clipboard.writeText(id).then(() => {
+            bsToast.show();
+        }).catch(err => {
+            console.error('Copy failed', err);
+            alert('复制失败，请手动复制');
+        });
+    };
+
+    // 切换状态功能
+    window.toggleStatus = (checkbox, id) => {
+        SaveManager.togglePlayed(id, checkbox.checked);
+    };
+
     function renderRow(item) {
         if (!item) return;
         const tr = document.createElement('tr');
@@ -547,6 +763,10 @@
 
         const hotHtml = item.hotScore ? `<div class="stat-item text-hot"><i class="fa-solid fa-fire"></i> ${item.hotScore}</div>` : '';
         const rateHtml = item.goodRate ? `<div class="stat-item text-rate"><i class="fa-solid fa-thumbs-up"></i> ${item.goodRate}</div>` : '';
+
+        // 获取当前存档的游玩状态
+        const isPlayed = SaveManager.getPlayedStatus(item.levelId);
+        const checkedAttr = isPlayed ? 'checked' : '';
 
         tr.innerHTML = `
             <td>
@@ -568,6 +788,7 @@
             <td>
                 <span class="badge-id">
                     <i class="fa-solid fa-fingerprint"></i>${item.levelId}
+                    <i class="fa-regular fa-copy copy-btn" onclick="copyId('${item.levelId}')" title="复制ID"></i>
                 </span>
             </td>
             <td>
@@ -581,6 +802,9 @@
                     <i class="fa-solid fa-users"></i> ${item.playersStr || 'N/A'}
                 </span>
             </td>
+            <td class="text-center">
+                <input type="checkbox" class="status-checkbox" ${checkedAttr} onchange="toggleStatus(this, '${item.levelId}')">
+            </td>
         `;
         tableBody.appendChild(tr);
     }
@@ -589,7 +813,7 @@
         const tr = document.createElement('tr');
         tr.className = 'error-row';
         tr.innerHTML = `
-            <td colspan="6" class="text-center">
+            <td colspan="7" class="text-center">
                 <i class="fa-solid fa-circle-exclamation me-1"></i> 
                 ID: <strong>${item.levelId}</strong> - ${item.msg}
             </td>
