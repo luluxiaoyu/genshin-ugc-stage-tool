@@ -1,0 +1,8 @@
+{
+    "collapseWhitespace": "aggressive",
+    "removeComments": "all",
+    "removeEmptyAttributes": true,
+    "removeRedundantAttributes": true,
+    "minifyCss": true,
+    "minifyJs": true
+}

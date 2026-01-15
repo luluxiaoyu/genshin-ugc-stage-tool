@@ -29,6 +29,7 @@ logs/
 tmp/
 dist/
 coverage/
+.parcel-cache/
 
 # 如果你不希望上传 public 里的生成图片（如果有的话）
 public/temp/
