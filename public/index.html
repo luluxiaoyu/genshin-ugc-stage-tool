@@ -7,11 +7,11 @@
     
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
-    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link href="https://jsdmirrors.aino.cyou/npm/@fortawesome/fontawesome-free@6.7.2/css/all.min.css" rel="stylesheet">
+    <link href="https://jsdmirrors.aino.cyou/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script src="https://jsdmirrors.aino.cyou/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="https://jsdmirrors.aino.cyou/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
     <style>
         :root {
@@ -370,6 +370,7 @@
     <div class="text-center mt-4 d-flex justify-content-center gap-3" id="actionButtons" style="display: none;">
         <button class="btn btn-success rounded-pill px-4 py-2 shadow-sm fw-bold" id="btnExportExcel">
             <i class="fa-solid fa-file-excel"></i> 导出 Excel
+            <span class="spinner-border spinner-border-sm" id="excelSpinner" style="display:none"></span>
         </button>
         <button class="btn btn-primary rounded-pill px-4 py-2 shadow-sm fw-bold" id="btnDownload">
             <i class="fa-solid fa-image"></i> 保存高清长图
@@ -411,8 +412,8 @@
   </div>
 </div>
 
-<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script src="https://jsdmirrors.aino.cyou/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://jsdmirrors.aino.cyou/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <script>
     // --- 存档管理逻辑 ---
@@ -561,7 +562,8 @@
 
     const btnStart = document.getElementById('btnStart');
     const btnDownload = document.getElementById('btnDownload');
-    const btnExportExcel = document.getElementById('btnExportExcel'); // 新增按钮
+    const btnExportExcel = document.getElementById('btnExportExcel');
+    const excelSpinner = document.getElementById('excelSpinner');
     const inputArea = document.getElementById('dataInput');
     const tableBody = document.getElementById('tableBody');
     const captureArea = document.getElementById('captureArea');
@@ -590,6 +592,27 @@
         } catch (e) {
             console.error('Base64 encode failed', e);
             return 'https://via.placeholder.com/100x56?text=Err';
+        }
+    };
+
+    // 获取图片的 Base64 数据
+    const fetchImageAsBase64 = async (url) => {
+        if (!url) return null;
+        const proxyUrl = getProxyUrl(url);
+        try {
+            const response = await fetch(proxyUrl);
+            const blob = await response.blob();
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64data = reader.result;
+                    resolve(base64data);
+                };
+                reader.readAsDataURL(blob);
+            });
+        } catch (e) {
+            console.warn("Failed to fetch image for Excel:", url);
+            return null;
         }
     };
 
@@ -695,7 +718,6 @@
         tableBody.innerHTML = ''; 
         globalResults = []; 
         captureArea.style.display = 'block';
-        // 使用 flex 显示按钮组
         actionButtons.className = 'text-center mt-4 d-flex justify-content-center gap-3';
         actionButtons.style.display = 'none';
         
@@ -739,7 +761,7 @@
             await Promise.all(validPromises);
             sortAndRender();
             countBadge.innerText = `${globalResults.length}`;
-            actionButtons.style.display = 'flex'; // 修改为 flex
+            actionButtons.style.display = 'flex';
             sortControl.style.display = 'inline-flex';
         } catch (globalErr) {
             console.error('Critical Error:', globalErr);
@@ -833,110 +855,148 @@
 
     // --- Excel 导出逻辑 ---
     btnExportExcel.addEventListener('click', async () => {
-        // 使用 ExcelJS 创建 Workbook
-        const workbook = new ExcelJS.Workbook();
-        workbook.creator = 'Genshin UGC Tool';
-        workbook.created = new Date();
-        
-        const sheet = workbook.addWorksheet('关卡数据');
+        // UI 状态
+        btnExportExcel.disabled = true;
+        excelSpinner.style.display = 'inline-block';
 
-        // 设置列
-        sheet.columns = [
-            { header: '序号', key: 'index', width: 8 },
-            { header: '关卡ID', key: 'id', width: 15 },
-            { header: '关卡名称', key: 'name', width: 25 },
-            { header: '作者', key: 'author', width: 15 },
-            { header: '类型', key: 'type', width: 12 },
-            { header: '标签', key: 'cat', width: 12 },
-            { header: '热度', key: 'hot', width: 10 },
-            { header: '好评', key: 'rate', width: 10 },
-            { header: '游玩人数', key: 'players', width: 12 },
-            { header: '状态', key: 'status', width: 10 },
-            { header: '封面链接', key: 'cover', width: 30 },
-        ];
-
-        // 样式：表头
-        const headerRow = sheet.getRow(1);
-        headerRow.font = { name: '微软雅黑', bold: true, color: { argb: 'FFFFFFFF' } };
-        headerRow.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FF4A90E2' } // 使用 CSS 中的 Primary Color
-        };
-        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
-        headerRow.height = 24;
-
-        // 获取当前排序后的数据
-        const sortMode = document.querySelector('input[name="sortMode"]:checked').value;
-        const validData = globalResults.filter(item => item !== undefined && item !== null && item.isSuccess);
-
-        let sortedData = [...validData];
-        if (sortMode === 'original') {
-            sortedData.sort((a, b) => a.originalIndex - b.originalIndex);
-        } else {
-            // 复用排序逻辑
-            sortedData.sort((a, b) => {
-                const d1 = a.data; const d2 = b.data;
-                const min1 = d1.sortMin || 999; const min2 = d2.sortMin || 999;
-                const max1 = d1.sortMax || 999; const max2 = d2.sortMax || 999;
-                if (min1 !== min2) return min1 - min2;
-                return max1 - max2;
-            });
-        }
-
-        // 填充数据
-        sortedData.forEach((item, index) => {
-            const d = item.data;
-            const isPlayed = SaveManager.getPlayedStatus(d.levelId);
+        try {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Genshin UGC Tool';
+            workbook.created = new Date();
             
-            const row = sheet.addRow({
-                index: index + 1,
-                id: d.levelId,
-                name: d.levelName || '未知',
-                author: d.authorName || '未知',
-                type: d.type || '-',
-                cat: d.category || '-',
-                hot: d.hotScore || '',
-                rate: d.goodRate || '',
-                players: d.playersStr || '',
-                status: isPlayed ? '★ 已玩' : '未玩',
-                cover: d.coverUrl || ''
+            const sheet = workbook.addWorksheet('关卡数据', {
+                views: [{showGridLines: false}] // 隐藏网格线，更美观
             });
 
-            // 样式：居中对齐
-            row.alignment = { vertical: 'middle', horizontal: 'center' };
-            
-            // 样式：状态列颜色
-            const statusCell = row.getCell('status');
-            if (isPlayed) {
-                statusCell.font = { color: { argb: 'FF2E7D32' }, bold: true }; // 绿色
+            // 设置列：调整顺序，封面图放最前面
+            sheet.columns = [
+                { header: '封面图', key: 'cover', width: 22 }, // 宽度调大以容纳图片
+                { header: '序号', key: 'index', width: 6 },
+                { header: '关卡ID', key: 'id', width: 15 },
+                { header: '关卡名称', key: 'name', width: 25 },
+                { header: '作者', key: 'author', width: 15 },
+                { header: '类型', key: 'type', width: 12 },
+                { header: '标签', key: 'cat', width: 12 },
+                { header: '热度', key: 'hot', width: 10 },
+                { header: '好评', key: 'rate', width: 10 },
+                { header: '游玩人数', key: 'players', width: 12 },
+                { header: '状态', key: 'status', width: 10 }
+            ];
+
+            // 样式：表头
+            const headerRow = sheet.getRow(1);
+            headerRow.font = { name: '微软雅黑', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
+            headerRow.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF4A90E2' } 
+            };
+            headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+            headerRow.height = 30;
+
+            // 获取数据
+            const sortMode = document.querySelector('input[name="sortMode"]:checked').value;
+            const validData = globalResults.filter(item => item !== undefined && item !== null && item.isSuccess);
+
+            let sortedData = [...validData];
+            if (sortMode === 'original') {
+                sortedData.sort((a, b) => a.originalIndex - b.originalIndex);
             } else {
-                statusCell.font = { color: { argb: 'FF999999' } }; // 灰色
+                sortedData.sort((a, b) => {
+                    const d1 = a.data; const d2 = b.data;
+                    const min1 = d1.sortMin || 999; const min2 = d2.sortMin || 999;
+                    const max1 = d1.sortMax || 999; const max2 = d2.sortMax || 999;
+                    if (min1 !== min2) return min1 - min2;
+                    return max1 - max2;
+                });
             }
 
-            // 样式：给ID加链接（看起来像链接）
-            const idCell = row.getCell('id');
-            idCell.font = { name: 'Consolas' };
+            // --- 批量获取图片并构建 Excel ---
             
-            // 样式：封面列缩小字体
-            row.getCell('cover').font = { size: 9, color: { argb: 'FF555555' } };
+            for (let i = 0; i < sortedData.length; i++) {
+                const item = sortedData[i];
+                const d = item.data;
+                const isPlayed = SaveManager.getPlayedStatus(d.levelId);
+                
+                // 添加行
+                const row = sheet.addRow({
+                    cover: '', // 留空，用图片覆盖
+                    index: i + 1,
+                    id: d.levelId,
+                    name: d.levelName || '未知',
+                    author: d.authorName || '未知',
+                    type: d.type || '-',
+                    cat: d.category || '-',
+                    hot: d.hotScore || '',
+                    rate: d.goodRate || '',
+                    players: d.playersStr || '',
+                    status: isPlayed ? '★ 已玩' : '未玩'
+                });
 
-            // 边框
-            row.eachCell((cell) => {
-                cell.border = {
-                    top: { style: 'thin', color: { argb: 'FFEEEEEE' } },
-                    left: { style: 'thin', color: { argb: 'FFEEEEEE' } },
-                    bottom: { style: 'thin', color: { argb: 'FFEEEEEE' } },
-                    right: { style: 'thin', color: { argb: 'FFEEEEEE' } }
-                };
-            });
-        });
+                // 设置行高 (足够放图片)
+                row.height = 60;
 
-        // 导出文件
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const fileName = `千星奇域_关卡统计_${new Date().toISOString().slice(0,10)}.xlsx`;
-        saveAs(blob, fileName);
+                // 通用样式：垂直水平居中
+                row.alignment = { vertical: 'middle', horizontal: 'center' };
+                
+                // 边框
+                row.eachCell({ includeEmpty: true }, (cell) => {
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFEEEEEE' } },
+                        left: { style: 'thin', color: { argb: 'FFEEEEEE' } },
+                        bottom: { style: 'thin', color: { argb: 'FFEEEEEE' } },
+                        right: { style: 'thin', color: { argb: 'FFEEEEEE' } }
+                    };
+                });
+
+                // 特殊样式：加粗 ID
+                const idCell = row.getCell('id');
+                idCell.font = { name: 'Consolas', bold: true, size: 11 };
+                
+                // 特殊样式：加粗 名称
+                const nameCell = row.getCell('name');
+                nameCell.font = { name: '微软雅黑', bold: true, size: 11 };
+
+                // 样式：状态颜色
+                const statusCell = row.getCell('status');
+                if (isPlayed) {
+                    statusCell.font = { color: { argb: 'FF2E7D32' }, bold: true };
+                } else {
+                    statusCell.font = { color: { argb: 'FF999999' } };
+                }
+
+                // --- 插入图片逻辑 ---
+                if (d.coverUrl) {
+                    const base64 = await fetchImageAsBase64(d.coverUrl);
+                    if (base64) {
+                        const imageId = workbook.addImage({
+                            base64: base64,
+                            extension: 'png',
+                        });
+                        
+                        // 插入到第一列 (col: 0)，当前行 (row: i + 1 因为表头占了一行)
+                        sheet.addImage(imageId, {
+                            tl: { col: 0.1, row: i + 1 + 0.1 }, // 留一点边距
+                            ext: { width: 128, height: 72 }, // 图片大小
+                            editAs: 'oneCell'
+                        });
+                    }
+                }
+            }
+
+            // 导出
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const fileName = `千星奇域_详细关卡数据_${new Date().toISOString().slice(0,10)}.xlsx`;
+            saveAs(blob, fileName);
+
+        } catch (e) {
+            console.error(e);
+            alert("导出 Excel 失败，请检查网络或重试。");
+        } finally {
+            btnExportExcel.disabled = false;
+            excelSpinner.style.display = 'none';
+        }
     });
 
     // --- 图片生成逻辑 ---
