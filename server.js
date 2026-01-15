@@ -16,6 +16,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/proxy-image/:base64Url', async (req, res) => {
     let base64Str = req.params.base64Url;
 
+    // 去除可能存在的后缀
     if (base64Str.endsWith('.png')) {
         base64Str = base64Str.slice(0, -4);
     }
@@ -32,6 +33,7 @@ app.get('/proxy-image/:base64Url', async (req, res) => {
             timeout: 10000 
         });
 
+        // 强缓存设置
         res.set('Cache-Control', 'public, max-age=31104000, immutable');
         res.set('Content-Type', response.headers['content-type']);
         
@@ -41,85 +43,99 @@ app.get('/proxy-image/:base64Url', async (req, res) => {
     }
 });
 
-// --- 数据查询接口 ---
+// --- 2数据查询接口 ---
 app.get('/guid', async (req, res) => {
     const { id } = req.query; 
 
+    // API 禁用缓存
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
 
     if (!id) return res.status(400).json({ error: '缺少 ID' });
 
-    const targetUrl = `https://octavia.kj415j45.space/api/stage?region=cn_gf01&id=${id}`;
-
     try {
-        const response = await axios.get(targetUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0' },
+        // 官方接口地址
+        const endpoint = 'https://bbs-api.miyoushe.com/community/ugc_community/web/api/level/full/info';
+        
+        // 构造 POST 请求体
+        const payload = {
+            region: 'cn_gf01', // 官服
+            level_id: id,
+            agg_req_list: [
+                { api_name: 'level_detail' },
+                { api_name: 'developer_info' },
+                { api_name: 'config' }
+            ]
+        };
+
+        const response = await axios.post(endpoint, payload, {
+            headers: { 
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Referer': 'https://www.miyoushe.com/',
+                'Content-Type': 'application/json'
+            },
             timeout: 15000 
         });
 
-        const rawData = response.data;
+        const jsonDoc = response.data;
         
-        if (!rawData || !rawData.author || !rawData.level) {
-            return res.status(404).json({ error: '数据结构异常或ID无效' });
+        // 检查业务状态码 (0 为成功)
+        if (jsonDoc.retcode !== 0) {
+            return res.status(404).json({ error: `API Error: ${jsonDoc.message}` });
         }
 
-        const meta = rawData.level.meta || {};
-        const author = rawData.author.game || {};
+        const respMap = jsonDoc.data?.resp_map;
 
-        let coverUrl = '';
-        const coverObj = meta.cover || {};
-        if (coverObj.images && coverObj.images.length > 0) {
-            coverUrl = coverObj.images[0];
-        } else if (coverObj.videoCover) {
-            coverUrl = coverObj.videoCover;
+        // 校验数据结构
+        if (!respMap?.level_detail?.data?.level_detail_response?.level_info ||
+            !respMap?.developer_info?.data?.developer_news_response) {
+            return res.status(404).json({ error: '数据结构异常' });
         }
 
-        const playersData = meta.players || {};
-        const playersStr = playersData.str || 'N/A';
-        
-        let minPlayers = 999;
-        let maxPlayers = 999;
-        
-        if (playersData.min !== undefined) {
-            minPlayers = parseInt(playersData.min);
-            maxPlayers = parseInt(playersData.max);
-        } else if (playersStr !== 'N/A') {
-            const parts = playersStr.split('-');
-            const p1 = parseInt(parts[0]);
-            if (!isNaN(p1)) {
-                minPlayers = p1;
-                maxPlayers = parts.length > 1 ? parseInt(parts[1]) : p1;
-            }
+        // 提取核心数据对象
+        const levelInfo = respMap.level_detail.data.level_detail_response.level_info;
+        const developerInfo = respMap.developer_info.data.developer_news_response;
+
+        // 处理封面逻辑：cover_img > images[0] > video_cover
+        let coverUrl = levelInfo.cover_img?.url;
+        if (!coverUrl && levelInfo.images && levelInfo.images.length > 0) {
+            coverUrl = levelInfo.images[0].url;
+        }
+        if (!coverUrl && levelInfo.video_info?.video_cover) {
+            coverUrl = levelInfo.video_info.video_cover;
         }
 
+        // 处理人数区间
+        const minPlayers = parseInt(levelInfo.limit_play_num_min) || 999;
+        const maxPlayers = parseInt(levelInfo.limit_play_num_max) || 999;
+
+        // 格式化返回数据
         const formattedData = {
-            authorName: author.name || '未知作者',
-            authorAvatar: author.avatar || '',
-            levelName: meta.name || '未知关卡',
-            levelId: rawData.level.id || id,
-            type: meta.type || '未知',
-            category: meta.category || '未知',
-            playersStr: playersStr,
-            hotScore: meta.hotScore || '0',
-            goodRate: meta.goodRate || '-',
+            authorName: developerInfo.developer.game_nickname || '未知作者',
+            authorAvatar: developerInfo.developer.game_avatar || '',
+            levelName: levelInfo.level_name || '未知关卡',
+            levelId: id,
+            type: levelInfo.play_type || '未知',
+            category: levelInfo.play_cate === "LEVEL_CATE_LONG_TERM" ? "长线游玩" : "轻量趣味",
+            playersStr: levelInfo.show_limit_play_num_str || 'N/A',
+            hotScore: levelInfo.hot_score || '0',
+            goodRate: levelInfo.good_rate || '-',
             sortMin: minPlayers,
             sortMax: maxPlayers,
-            coverUrl: coverUrl
+            coverUrl: coverUrl || ''
         };
 
         res.json({ success: true, data: formattedData });
 
     } catch (error) {
         console.error(`Fetch ID ${id} Error: ${error.message}`);
-        res.status(500).json({ error: '请求超时或源站错误' });
+        res.status(500).json({ error: '服务器内部错误或请求超时' });
     }
 });
 
 // --- 404 处理路由 ---
 app.get('*', (req, res) => {
-    // 设置状态码为 404 并发送 404.html 文件
     res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
