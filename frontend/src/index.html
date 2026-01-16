@@ -303,7 +303,12 @@
             <label for="dataInput" class="form-label text-muted">请输入列表 (格式: ID 或 ID:备注，一行一个)</label>
             <textarea class="form-control" id="dataInput" rows="5"></textarea>
         </div>
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end align-items-center">
+            <div class="form-check form-switch d-inline-flex align-items-center me-3" title="勾选后忽略缓存，直接从服务器获取最新数据">
+                <input class="form-check-input" type="checkbox" role="switch" id="forceRefresh">
+                <label class="form-check-label ms-2 text-secondary small" for="forceRefresh">强制刷新</label>
+            </div>
+
             <button class="btn btn-primary px-4 rounded-pill fw-bold" type="button" id="btnStart">
                 <i class="fa-solid fa-magnifying-glass"></i> 开始提取 
                 <span class="spinner-border spinner-border-sm loading-spinner" id="spinner"></span>
@@ -575,6 +580,7 @@
     const sortRadios = document.querySelectorAll('input[name="sortMode"]');
     const toastEl = document.getElementById('copyToast');
     const bsToast = new bootstrap.Toast(toastEl);
+    const forceRefreshCheckbox = document.getElementById('forceRefresh');
 
     const LINE_REGEX = /^(\d+)(?:[:：].*)?$/;
     const CACHE_DURATION = 3 * 60 * 60 * 1000;
@@ -583,6 +589,24 @@
 
     // 初始化存档系统
     SaveManager.init();
+
+    // 检查URL参数并自动加载
+    function checkUrlParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const idsParam = urlParams.get('ids');
+        if (idsParam) {
+            // 将逗号分隔的ID转换为换行分隔，填充到输入框
+            const ids = idsParam.split(',').join('\n');
+            inputArea.value = ids;
+            
+            // 稍作延迟确保UI渲染完成，自动触发点击
+            setTimeout(() => {
+                if(inputArea.value.trim()) {
+                    btnStart.click();
+                }
+            }, 200);
+        }
+    }
 
     const getProxyUrl = (url) => {
         if (!url) return 'https://via.placeholder.com/100x56?text=N/A';
@@ -616,19 +640,23 @@
         }
     };
 
-    async function fetchWithRetry(id, maxRetries = 3) {
+    async function fetchWithRetry(id, maxRetries = 3, forceRefresh = false) {
         const cacheKey = `stage_data_${id}`;
-        const cachedStr = localStorage.getItem(cacheKey);
         
-        if (cachedStr) {
-            try {
-                const cachedObj = JSON.parse(cachedStr);
-                const now = Date.now();
-                if (now - cachedObj.timestamp < CACHE_DURATION) {
-                    return { isSuccess: true, data: cachedObj.data, id: id };
+        // 只有在非强制刷新模式下才检查缓存
+        if (!forceRefresh) {
+            const cachedStr = localStorage.getItem(cacheKey);
+            
+            if (cachedStr) {
+                try {
+                    const cachedObj = JSON.parse(cachedStr);
+                    const now = Date.now();
+                    if (now - cachedObj.timestamp < CACHE_DURATION) {
+                        return { isSuccess: true, data: cachedObj.data, id: id };
+                    }
+                } catch (e) {
+                    localStorage.removeItem(cacheKey);
                 }
-            } catch (e) {
-                localStorage.removeItem(cacheKey);
             }
         }
 
@@ -713,6 +741,7 @@
 
     btnStart.addEventListener('click', async () => {
         const text = inputArea.value.trim();
+        const forceRefresh = forceRefreshCheckbox.checked; // 获取强制刷新状态
         if (!text) return alert('请输入内容');
 
         tableBody.innerHTML = ''; 
@@ -731,6 +760,21 @@
         genTimeSpan.innerText = now.toLocaleString('zh-CN', { hour12: false });
 
         const lines = text.split(/\n/).map(l => l.trim()).filter(l => l);
+        
+        // --- 更新URL参数逻辑 ---
+        const idsForUrl = [];
+        lines.forEach(line => {
+            const match = line.match(LINE_REGEX);
+            if (match) idsForUrl.push(match[1]);
+        });
+        
+        if (idsForUrl.length > 0) {
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.set('ids', idsForUrl.join(','));
+            window.history.replaceState({}, '', newUrl);
+        }
+        // ---------------------------
+
         let completedCount = 0;
 
         const promises = lines.map(async (line, index) => {
@@ -738,7 +782,8 @@
             if (!match) return null;
             const id = match[1];
             
-            const result = await fetchWithRetry(id, 3);
+            // 传入 forceRefresh 参数
+            const result = await fetchWithRetry(id, 3, forceRefresh);
             const resultWithIndex = { ...result, originalIndex: index };
             
             globalResults.push(resultWithIndex);
@@ -1023,6 +1068,9 @@
             console.error(err);
         });
     });
+
+    // 页面加载完成后检查参数
+    window.onload = checkUrlParams;
 </script>
 
 </body>
