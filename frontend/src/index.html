@@ -15,40 +15,40 @@
     <script src="https://jsdmirrors.aino.cyou/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <script src="https://jsdmirrors.aino.cyou/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
-<body class="bg-gradient-to-br from-[#f5f7fa] to-[#c3cfe2] min-h-screen pb-16 font-sans text-gray-800 antialiased">
+<body class="bg-gradient-to-br from-[#f5f7fa] to-[#c3cfe2] dark:from-gray-900 dark:to-gray-800 min-h-screen pb-16 font-sans text-gray-800 dark:text-gray-200 antialiased transition-colors duration-300">
 
 <div class="max-w-[1150px] mx-auto pt-10 px-4">
-    <div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.1)] border border-white/40 p-8 mb-6">
+    <div class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.1)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] border border-white/40 dark:border-gray-700/50 p-8 mb-6 transition-colors duration-300">
         
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <h3 class="text-2xl font-bold text-gray-800 flex items-center gap-2 m-0">
+            <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2 m-0 transition-colors">
                 <i class="fa-solid fa-star text-yellow-500"></i> 千星奇域关卡数据提取
             </h3>
             <div class="flex items-center gap-3">
-                <span id="currentProfileDisplay" class="text-sm text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full flex items-center gap-2">
+                <span id="currentProfileDisplay" class="text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-full flex items-center gap-2 transition-colors">
                     <i class="fa-solid fa-folder-open"></i> 默认存档
                 </span>
-                <button onclick="toggleModal('saveManagerModal')" class="text-sm border border-gray-300 bg-white hover:bg-gray-50 px-4 py-1.5 rounded-full flex items-center gap-2 transition-colors shadow-sm">
+                <button onclick="toggleModal('saveManagerModal')" class="text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-1.5 rounded-full flex items-center gap-2 transition-colors shadow-sm">
                     <i class="fa-solid fa-floppy-disk"></i> 存档管理
                 </button>
             </div>
         </div>
         
         <div class="mb-5">
-            <label for="dataInput" class="block text-sm font-medium text-gray-500 mb-2">请输入列表 (格式: ID 或 ID:备注，一行一个)</label>
-            <textarea id="dataInput" rows="5" class="w-full border-2 border-gray-200 rounded-xl p-3 font-mono text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors bg-white"></textarea>
+            <label for="dataInput" class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 transition-colors">请输入列表 (格式: ID 或 ID:备注，一行一个)</label>
+            <textarea id="dataInput" rows="5" class="w-full border-2 border-gray-200 dark:border-gray-600 rounded-xl p-3 font-mono text-sm focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors"></textarea>
         </div>
 
         <div class="flex flex-col sm:flex-row justify-end items-center gap-4">
             <label class="flex items-center cursor-pointer gap-2" title="勾选后忽略缓存，直接从服务器获取最新数据">
                 <div class="relative">
                     <input type="checkbox" id="forceRefresh" class="sr-only peer">
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                    <div class="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-gray-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                 </div>
-                <span class="text-sm text-gray-500 select-none">强制刷新</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400 select-none transition-colors">强制刷新</span>
             </label>
 
-            <button type="button" id="btnStart" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full flex items-center gap-2 transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed">
+            <button type="button" id="btnStart" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full flex items-center gap-2 transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed">
                 <i class="fa-solid fa-magnifying-glass"></i> 开始提取 
                 <svg id="spinner" class="animate-spin h-4 w-4 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -58,28 +58,28 @@
         </div>
     </div>
 
-    <div id="captureArea" class="bg-white rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] mt-5 p-8 hidden">
-        <div class="flex justify-between items-end border-b-2 border-gray-100 pb-4 mb-5">
+    <div id="captureArea" class="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] mt-5 p-8 hidden transition-colors duration-300">
+        <div class="flex justify-between items-end border-b-2 border-gray-100 dark:border-gray-700 pb-4 mb-5 transition-colors">
             <div class="flex items-center w-1/2">
                 <img src="./nahida.png" class="w-12 h-12 object-contain mr-4 shrink-0" alt="icon" crossorigin="anonymous">
-                <div class="text-[26px] font-extrabold text-gray-800 border-b border-transparent hover:border-gray-300 focus:border-gray-300 outline-none w-full py-0.5 cursor-text leading-snug" contenteditable="true" spellcheck="false">关卡统计列表</div>
+                <div class="text-[26px] font-extrabold text-gray-800 dark:text-gray-100 border-b border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-gray-300 dark:focus:border-gray-600 outline-none w-full py-0.5 cursor-text leading-snug transition-colors" contenteditable="true" spellcheck="false">关卡统计列表</div>
             </div>
             
             <div class="flex flex-col items-end gap-2.5">
                 <div class="inline-flex rounded-md shadow-sm hidden" role="group" id="sortControl">
                     <label class="cursor-pointer">
                         <input type="radio" name="sortMode" id="sortOriginal" value="original" class="peer sr-only" checked>
-                        <span class="px-3 py-1.5 text-xs font-medium border border-blue-600 text-blue-600 rounded-l-md peer-checked:bg-blue-600 peer-checked:text-white hover:bg-blue-50 transition-colors flex items-center gap-1.5"><i class="fa-solid fa-list-ol"></i> 原始排序</span>
+                        <span class="px-3 py-1.5 text-xs font-medium border border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-500 rounded-l-md peer-checked:bg-blue-600 peer-checked:text-white dark:peer-checked:bg-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors flex items-center gap-1.5"><i class="fa-solid fa-list-ol"></i> 原始排序</span>
                     </label>
                     <label class="cursor-pointer">
                         <input type="radio" name="sortMode" id="sortPlayers" value="players" class="peer sr-only">
-                        <span class="px-3 py-1.5 text-xs font-medium border border-l-0 border-blue-600 text-blue-600 rounded-r-md peer-checked:bg-blue-600 peer-checked:text-white hover:bg-blue-50 transition-colors flex items-center gap-1.5"><i class="fa-solid fa-arrow-down-short-wide"></i> 人数排序</span>
+                        <span class="px-3 py-1.5 text-xs font-medium border border-l-0 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-500 rounded-r-md peer-checked:bg-blue-600 peer-checked:text-white dark:peer-checked:bg-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors flex items-center gap-1.5"><i class="fa-solid fa-arrow-down-short-wide"></i> 人数排序</span>
                     </label>
                 </div>
 
-                <div class="text-right text-sm text-gray-400 leading-relaxed min-w-[150px]">
-                    <div>生成时间: <strong id="genTime" class="text-gray-600 font-medium">-</strong></div>
-                    <div>项目数量: <strong id="countBadge" class="text-gray-600 font-medium">0</strong></div>
+                <div class="text-right text-sm text-gray-400 dark:text-gray-500 leading-relaxed min-w-[150px] transition-colors">
+                    <div>生成时间: <strong id="genTime" class="text-gray-600 dark:text-gray-300 font-medium">-</strong></div>
+                    <div>项目数量: <strong id="countBadge" class="text-gray-600 dark:text-gray-300 font-medium">0</strong></div>
                 </div>
             </div>
         </div>
@@ -87,7 +87,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse" id="resultTable">
                 <thead>
-                    <tr class="bg-gray-50 text-gray-600 text-sm border-b-2 border-gray-200">
+                    <tr class="bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 text-sm border-b-2 border-gray-200 dark:border-gray-700 transition-colors">
                         <th class="py-3 px-3 font-bold w-[100px] whitespace-nowrap">封面</th>
                         <th class="py-3 px-3 font-bold w-[150px] whitespace-nowrap">作者</th>
                         <th class="py-3 px-3 font-bold whitespace-nowrap">关卡信息</th>
@@ -101,50 +101,50 @@
             </table>
         </div>
 
-        <div class="mt-6 pt-4 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400">
+        <div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-xs text-gray-400 dark:text-gray-500 transition-colors">
             <div>Generated by 
-                <a href="https://github.com/luluxiaoyu/genshin-ugc-stage-tool" target="_blank" class="font-bold hover:text-blue-600 hover:underline transition-colors">
+                <a href="https://github.com/luluxiaoyu/genshin-ugc-stage-tool" target="_blank" class="font-bold hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors">
                     Genshin UGC stage Tools
                 </a>
             </div>
             <div class="text-right">
-                数据来源：<a href="https://www.miyoushe.com/ys/" target="_blank" class="font-bold hover:text-blue-600 transition-colors">miyoushe</a>
+                数据来源：<a href="https://www.miyoushe.com/ys/" target="_blank" class="font-bold hover:text-blue-600 dark:hover:text-blue-400 transition-colors">miyoushe</a>
             </div>
         </div>
     </div>
 
     <div class="mt-8 flex justify-center gap-4 hidden" id="actionButtons">
-        <button id="btnExportExcel" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-6 rounded-full shadow-md transition-colors flex items-center gap-2">
+        <button id="btnExportExcel" class="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white font-bold py-2.5 px-6 rounded-full shadow-md transition-colors flex items-center gap-2">
             <i class="fa-solid fa-file-excel"></i> 导出 Excel
             <svg id="excelSpinner" class="animate-spin h-4 w-4 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
         </button>
-        <button id="btnDownload" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-full shadow-md transition-colors flex items-center gap-2">
+        <button id="btnDownload" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold py-2.5 px-6 rounded-full shadow-md transition-colors flex items-center gap-2">
             <i class="fa-solid fa-image"></i> 保存高清长图
         </button>
     </div>
 </div>
 
-<div id="saveManagerModal" class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-sm flex items-center justify-center transition-opacity" aria-hidden="true">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
-        <div class="flex justify-between items-center p-5 border-b border-gray-100">
-            <h5 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-box-archive text-blue-500"></i> 存档管理</h5>
-            <button onclick="toggleModal('saveManagerModal')" class="text-gray-400 hover:text-gray-600 transition-colors outline-none">
+<div id="saveManagerModal" class="fixed inset-0 z-50 hidden bg-gray-900/40 dark:bg-gray-900/80 backdrop-blur-sm flex items-center justify-center transition-opacity" aria-hidden="true">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform transition-all border dark:border-gray-700">
+        <div class="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-700">
+            <h5 class="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2 transition-colors"><i class="fa-solid fa-box-archive text-blue-500"></i> 存档管理</h5>
+            <button onclick="toggleModal('saveManagerModal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors outline-none">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
         </div>
-        <div class="p-5 bg-gray-50">
+        <div class="p-5 bg-gray-50 dark:bg-gray-900 transition-colors">
             <div class="flex justify-between mb-4">
-                <button onclick="SaveManager.createNewProfile()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                <button onclick="SaveManager.createNewProfile()" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 shadow-sm">
                     <i class="fa-solid fa-plus"></i> 新建存档
                 </button>
                 <div class="flex gap-2">
-                    <button onclick="document.getElementById('importFile').click()" class="border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                    <button onclick="document.getElementById('importFile').click()" class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 shadow-sm">
                         <i class="fa-solid fa-file-import"></i> 导入
                     </button>
-                    <button onclick="SaveManager.exportData()" class="border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                    <button onclick="SaveManager.exportData()" class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 shadow-sm">
                         <i class="fa-solid fa-file-export"></i> 备份
                     </button>
                     <input type="file" id="importFile" class="hidden" accept=".json" onchange="SaveManager.importData(this)">
@@ -163,7 +163,6 @@
 </div>
 
 <script>
-    // --- 极简模态窗与 Toast 逻辑替代 Bootstrap ---
     window.toggleModal = (id) => {
         const modal = document.getElementById(id);
         modal.classList.toggle('hidden');
@@ -179,7 +178,6 @@
         }, 2000);
     };
 
-    // --- 存档管理逻辑 ---
     const SaveManager = {
         STORAGE_KEY: 'genshin_ugc_save_data_v1',
         data: {
@@ -294,12 +292,11 @@
                 } catch (err) {
                     alert("文件解析失败");
                 }
-                input.value = ''; // Reset
+                input.value = ''; 
             };
             reader.readAsText(file);
         },
 
-        // Tailwind 样式的列表渲染
         renderModalList() {
             const listEl = document.getElementById('profileList');
             listEl.innerHTML = '';
@@ -307,21 +304,19 @@
                 const p = this.data.profiles[id];
                 const isActive = id === this.data.currentProfileId;
                 const li = document.createElement('li');
-                li.className = `flex justify-between items-center p-3 border rounded-xl bg-white transition-colors ${isActive ? 'border-blue-500 shadow-sm' : 'border-gray-200'}`;
+                li.className = `flex justify-between items-center p-3 border rounded-xl bg-white dark:bg-gray-800 transition-colors ${isActive ? 'border-blue-500 shadow-sm' : 'border-gray-200 dark:border-gray-700'}`;
                 li.innerHTML = `
                     <div class="cursor-pointer flex-grow flex items-center group" onclick="SaveManager.switchProfile('${id}')">
-                        ${isActive ? '<i class="fa-solid fa-circle-check text-blue-600 mr-2.5 text-lg"></i>' : '<i class="fa-regular fa-circle text-gray-300 group-hover:text-blue-400 mr-2.5 text-lg transition-colors"></i>'}
-                        <span class="font-bold text-gray-700">${p.name}</span>
-                        <span class="bg-gray-100 text-gray-500 text-xs font-semibold px-2.5 py-0.5 rounded-full ml-2">${p.playedLevels?.length || 0}</span>
+                        ${isActive ? '<i class="fa-solid fa-circle-check text-blue-600 dark:text-blue-400 mr-2.5 text-lg"></i>' : '<i class="fa-regular fa-circle text-gray-300 dark:text-gray-500 group-hover:text-blue-400 mr-2.5 text-lg transition-colors"></i>'}
+                        <span class="font-bold text-gray-700 dark:text-gray-200">${p.name}</span>
+                        <span class="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-xs font-semibold px-2.5 py-0.5 rounded-full ml-2 transition-colors">${p.playedLevels?.length || 0}</span>
                     </div>
-                    ${!isActive ? `<button class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors ml-2 outline-none" onclick="SaveManager.deleteProfile('${id}')" title="删除"><i class="fa-solid fa-trash-can text-sm"></i></button>` : ''}
+                    ${!isActive ? `<button class="text-red-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 p-2 rounded-lg transition-colors ml-2 outline-none" onclick="SaveManager.deleteProfile('${id}')" title="删除"><i class="fa-solid fa-trash-can text-sm"></i></button>` : ''}
                 `;
                 listEl.appendChild(li);
             });
         }
     };
-
-    // --- 主程序逻辑 ---
 
     const btnStart = document.getElementById('btnStart');
     const btnDownload = document.getElementById('btnDownload');
@@ -436,7 +431,7 @@
         const validData = globalResults.filter(item => item !== undefined && item !== null);
 
         if (validData.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-gray-400">无有效数据</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-gray-400 dark:text-gray-500 transition-colors">无有效数据</td></tr>';
             return;
         }
 
@@ -541,11 +536,11 @@
         SaveManager.togglePlayed(id, checkbox.checked);
     };
 
-    // --- Tailwind 样式的渲染重写 ---
     function renderRow(item) {
         if (!item) return;
         const tr = document.createElement('tr');
-        tr.className = "border-b border-gray-100 hover:bg-gray-50/50 transition-colors";
+        // 加入深色模式下的 Hover 效果和边框
+        tr.className = "border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors";
         
         const avatarUrl = getProxyUrl(item.authorAvatar);
         const coverUrl = getProxyUrl(item.coverUrl);
@@ -558,37 +553,37 @@
 
         tr.innerHTML = `
             <td class="p-3">
-                <img src="${coverUrl}" class="w-24 h-[54px] rounded-md object-cover border border-gray-200 block shadow-sm" alt="封面" crossorigin="anonymous">
+                <img src="${coverUrl}" class="w-24 h-[54px] rounded-md object-cover border border-gray-200 dark:border-gray-600 block shadow-sm transition-colors" alt="封面" crossorigin="anonymous">
             </td>
             <td class="p-3">
                 <div class="flex items-center">
-                    <img src="${avatarUrl}" class="w-9 h-9 rounded-full object-cover border border-gray-200 mr-2.5 shrink-0" alt="头像" crossorigin="anonymous">
-                    <div class="font-bold text-xs text-gray-700 truncate max-w-[100px]" title="${item.authorName || '未知'}">${item.authorName || '未知'}</div>
+                    <img src="${avatarUrl}" class="w-9 h-9 rounded-full object-cover border border-gray-200 dark:border-gray-600 mr-2.5 shrink-0 transition-colors" alt="头像" crossorigin="anonymous">
+                    <div class="font-bold text-xs text-gray-700 dark:text-gray-200 truncate max-w-[100px] transition-colors" title="${item.authorName || '未知'}">${item.authorName || '未知'}</div>
                 </div>
             </td>
             <td class="p-3">
-                <div class="text-[15px] font-bold text-gray-800 mb-1.5 leading-snug">${item.levelName || '未知'}</div>
+                <div class="text-[15px] font-bold text-gray-800 dark:text-gray-100 mb-1.5 leading-snug transition-colors">${item.levelName || '未知'}</div>
                 <div class="block">
-                    <span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[11px] font-medium mr-1 inline-block border border-blue-100/50">${item.type || '-'}</span>
-                    <span class="bg-purple-50 text-purple-600 px-2 py-0.5 rounded text-[11px] font-medium inline-block border border-purple-100/50">${item.category || '-'}</span>
+                    <span class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded text-[11px] font-medium mr-1 inline-block border border-blue-100/50 dark:border-blue-800/50 transition-colors">${item.type || '-'}</span>
+                    <span class="bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded text-[11px] font-medium inline-block border border-purple-100/50 dark:border-purple-800/50 transition-colors">${item.category || '-'}</span>
                 </div>
             </td>
             <td class="p-3">
-                <span class="font-mono text-gray-500 bg-gray-50/80 px-2.5 py-1.5 rounded-lg text-[13px] border border-gray-200 flex items-center w-max shadow-sm">
+                <span class="font-mono text-gray-500 dark:text-gray-300 bg-gray-50/80 dark:bg-gray-700/80 px-2.5 py-1.5 rounded-lg text-[13px] border border-gray-200 dark:border-gray-600 flex items-center w-max shadow-sm transition-colors">
                     <i class="fa-solid fa-fingerprint text-gray-400 mr-1.5"></i>${item.levelId}
-                    <i class="fa-regular fa-copy ml-2.5 cursor-pointer text-gray-400 hover:text-blue-600 hover:scale-110 transition-all" onclick="copyId('${item.levelId}')" title="复制ID"></i>
+                    <i class="fa-regular fa-copy ml-2.5 cursor-pointer text-gray-400 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-110 transition-all" onclick="copyId('${item.levelId}')" title="复制ID"></i>
                 </span>
             </td>
             <td class="p-3">
                 <div class="flex flex-col">${hotHtml}${rateHtml}</div>
             </td>
             <td class="p-3 text-center">
-                <span class="text-[13px] font-bold text-green-700 bg-green-50 px-3 py-1.5 rounded-full inline-block whitespace-nowrap border border-green-100/50">
+                <span class="text-[13px] font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-3 py-1.5 rounded-full inline-block whitespace-nowrap border border-green-100/50 dark:border-green-800/50 transition-colors">
                     <i class="fa-solid fa-users mr-1"></i> ${item.playersStr || 'N/A'}
                 </span>
             </td>
             <td class="p-3 text-center">
-                <input type="checkbox" class="w-5 h-5 cursor-pointer accent-blue-600 outline-none hover:scale-110 transition-transform" ${checkedAttr} onchange="toggleStatus(this, '${item.levelId}')">
+                <input type="checkbox" class="w-5 h-5 cursor-pointer accent-blue-600 dark:accent-blue-500 outline-none hover:scale-110 transition-transform" ${checkedAttr} onchange="toggleStatus(this, '${item.levelId}')">
             </td>
         `;
         tableBody.appendChild(tr);
@@ -596,17 +591,16 @@
 
     function renderErrorRow(item) {
         const tr = document.createElement('tr');
-        tr.className = 'bg-red-50/50 border-b border-red-100';
+        tr.className = 'bg-red-50/50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-800/50 transition-colors';
         tr.innerHTML = `
-            <td colspan="7" class="text-center py-5 text-red-500 text-[13px]">
+            <td colspan="7" class="text-center py-5 text-red-500 dark:text-red-400 text-[13px] transition-colors">
                 <i class="fa-solid fa-circle-exclamation mr-1.5"></i> 
-                ID: <strong class="font-semibold text-red-600">${item.levelId}</strong> - ${item.msg}
+                ID: <strong class="font-semibold text-red-600 dark:text-red-400">${item.levelId}</strong> - ${item.msg}
             </td>
         `;
         tableBody.appendChild(tr);
     }
 
-    // Excel 导出逻辑 (核心逻辑未变)
     btnExportExcel.addEventListener('click', async () => {
         btnExportExcel.disabled = true;
         excelSpinner.classList.remove('hidden');
@@ -634,7 +628,7 @@
 
             const headerRow = sheet.getRow(1);
             headerRow.font = { name: '微软雅黑', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
-            headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } }; // 使用蓝色的 Tailwind hex
+            headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } }; 
             headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
             headerRow.height = 30;
 
@@ -690,9 +684,9 @@
 
                 const statusCell = row.getCell('status');
                 if (isPlayed) {
-                    statusCell.font = { color: { argb: 'FF15803D' }, bold: true }; // Tailwind green-700
+                    statusCell.font = { color: { argb: 'FF15803D' }, bold: true }; 
                 } else {
-                    statusCell.font = { color: { argb: 'FF9CA3AF' } }; // Tailwind gray-400
+                    statusCell.font = { color: { argb: 'FF9CA3AF' } }; 
                 }
 
                 if (d.coverUrl) {
@@ -720,17 +714,21 @@
         }
     });
 
-    // 长图生成逻辑
+    // 智能深色模式识别的长图生成逻辑
     btnDownload.addEventListener('click', () => {
         genTimeSpan.innerText = new Date().toLocaleString('zh-CN', { hour12: false });
         window.scrollTo(0,0);
 
-        // 为了更好的截图效果，临时增加无圆角的样式或者移除外边距
-        captureArea.classList.remove('shadow-[0_4px_12px_rgba(0,0,0,0.05)]');
+        // 临时移除阴影防止截图白边/黑边
+        captureArea.classList.remove('shadow-[0_4px_12px_rgba(0,0,0,0.05)]', 'dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)]');
         
+        // 自动识别当前的系统主题模式决定背景色 (深色用 gray-800 的十六进制色)
+        const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const targetBgColor = isDarkMode ? '#1f2937' : '#ffffff';
+
         html2canvas(captureArea, {
             scale: 2, 
-            backgroundColor: '#ffffff', 
+            backgroundColor: targetBgColor, // 动态背景色
             useCORS: true, 
             allowTaint: true,
             logging: false,
@@ -740,8 +738,9 @@
             link.download = `千星奇域数据_${new Date().getTime()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-            // 恢复样式
-            captureArea.classList.add('shadow-[0_4px_12px_rgba(0,0,0,0.05)]');
+            
+            // 恢复阴影
+            captureArea.classList.add('shadow-[0_4px_12px_rgba(0,0,0,0.05)]', 'dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)]');
         }).catch(err => {
             alert('生成失败');
             console.error(err);
