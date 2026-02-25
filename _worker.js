@@ -130,7 +130,7 @@ export default {
         // 构建最终返回数据 (保持原有格式)
         const data = {
           authorName: developerInfo.developer.game_nickname || '未知',
-          authorAvatar: developerInfo.developer.game_avatar || '',
+          authorAvatar: developerInfo.developer.mys_user_info.avatar_url || '',
           levelName: levelInfo.level_name || '未知',
           levelId: id, 
           type: levelInfo.play_type || '未知',
