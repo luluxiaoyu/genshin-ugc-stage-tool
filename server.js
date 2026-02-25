@@ -27,6 +27,10 @@ app.get('/proxy-image/:base64Url', async (req, res) => {
         const decodedStr = decodeURIComponent(base64Str);
         const imageUrl = Buffer.from(decodedStr, 'base64').toString('utf-8');
 
+        if (!imageUrl.startsWith('https://bbs-static.miyoushe.com')) {
+            return res.status(403).send('Forbidden: Domain not allowed');
+        }
+
         const response = await axios.get(imageUrl, {
             responseType: 'arraybuffer',
             headers: { 'User-Agent': 'Mozilla/5.0' },
@@ -113,7 +117,7 @@ app.get('/guid', async (req, res) => {
         // 格式化返回数据
         const formattedData = {
             authorName: developerInfo.developer.game_nickname || '未知作者',
-            authorAvatar: developerInfo.developer.game_avatar || '',
+            authorAvatar: developerInfo.developer.mys_user_info.avatar_url || '',
             levelName: levelInfo.level_name || '未知关卡',
             levelId: id,
             type: levelInfo.play_type || '未知',
