@@ -27,7 +27,7 @@ app.get('/proxy-image/:base64Url', async (req, res) => {
         const decodedStr = decodeURIComponent(base64Str);
         const imageUrl = Buffer.from(decodedStr, 'base64').toString('utf-8');
 
-        if (!imageUrl.startsWith('https://bbs-static.miyoushe.com')) {
+        if (!imageUrl.startsWith('https://upload-bbs.miyoushe.com') && !imageUrl.startsWith('https://bbs-static.miyoushe.com') && !imageUrl.startsWith('https://ugc-upload.mihoyo.com')) {
             return res.status(403).send('Forbidden: Domain not allowed');
         }
 

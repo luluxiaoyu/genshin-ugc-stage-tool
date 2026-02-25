@@ -23,6 +23,20 @@ export default {
 
       try {
         const targetUrl = atob(decodeURIComponent(str));
+        const allowedDomains = [
+            'https://upload-bbs.miyoushe.com',
+            'https://bbs-static.miyoushe.com',
+            'https://ugc-upload.mihoyo.com'
+        ];
+
+        const isAllowed = allowedDomains.some(domain => targetUrl.startsWith(domain));
+
+        if (!isAllowed) {
+            return new Response('Forbidden: Domain not allowed', { 
+                status: 403, 
+                headers: corsHeaders 
+            });
+        }
         const res = await fetch(targetUrl, {
           headers: { 'User-Agent': 'Mozilla/5.0' }
         });
