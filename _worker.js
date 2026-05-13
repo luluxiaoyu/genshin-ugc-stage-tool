@@ -130,7 +130,7 @@ export default {
         // 构建最终返回数据 (保持原有格式)
         const data = {
           authorName: developerInfo.developer.game_nickname || '未知',
-          authorAvatar: developerInfo.developer.mys_user_info.avatar_url || '',
+          authorAvatar: developerInfo?.developer?.mys_user_info?.avatar_url || 'https://bbs-static.miyoushe.com/communityweb/upload/c9d11674eac7631d2210a1ba20799958.png',
           levelName: levelInfo.level_name || '未知',
           levelId: id, 
           type: levelInfo.play_type || '未知',
