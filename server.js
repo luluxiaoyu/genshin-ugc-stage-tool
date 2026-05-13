@@ -117,7 +117,7 @@ app.get('/guid', async (req, res) => {
         // 格式化返回数据
         const formattedData = {
             authorName: developerInfo.developer.game_nickname || '未知作者',
-            authorAvatar: developerInfo.developer.mys_user_info.avatar_url || '',
+            authorAvatar: developerInfo?.developer?.mys_user_info?.avatar_url || 'https://bbs-static.miyoushe.com/communityweb/upload/c9d11674eac7631d2210a1ba20799958.png',
             levelName: levelInfo.level_name || '未知关卡',
             levelId: id,
             type: levelInfo.play_type || '未知',
